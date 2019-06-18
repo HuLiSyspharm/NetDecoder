@@ -5,11 +5,12 @@
  */
 
 package netdecoder;
-
+import java.io.IOException;//zc debug
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +114,13 @@ public class InputOutput {
                 //String uniprot = columns[1];
                 String uniprot = columns[2];
                 String goID = columns[4];
+                //zc debug
+                
+//                System.out.println(Arrays.toString(columns));
+//                System.out.println("uniprot=" + uniprot);
+//                System.out.println("goID=" + goID);
+//                System.in.read();
+                
                 if(!go.containsKey(uniprot)){
                     List<String> gos = new ArrayList<String>();
                     gos.add(goID);
