@@ -968,6 +968,21 @@ public class NetworkFlow implements Serializable{
                 }
             }
         }
+        //20190617 cheng zhang: output the default sinks
+        String fileout="./default_sinks_human.txt";
+        File f = new File(fileout);
+            if (!f.exists()) {
+                f.createNewFile();
+            }
+        System.out.println("writing default sinks to file " + f.getAbsolutePath());
+        FileWriter fw = new FileWriter(f.getAbsoluteFile());
+        BufferedWriter bw = new BufferedWriter(fw);
+        for(String m: universalSinks){
+                bw.write(m + "\n");
+            }
+        bw.close();
+        //end modification 20190617
+        
         return universalSinks;
     }
 
@@ -1088,7 +1103,13 @@ public class NetworkFlow implements Serializable{
         for(String k:map.keySet()){
             ArrayList<String> newGO = new ArrayList<String>();
             for(String g:map.get(k)){
+                
                 OntologyUtils.Term term = hierarchy.get(g);
+                if (term==null)//zc@20160821, add checking for null, i.e. GO in organism annotation does not exists in GO hierarchy.
+                  {
+                  System.out.println("null term for g - "+g+", skipped.");
+                  continue;
+                  }
                 if(term.getNamespace().equals("biological_process")){ //term.getName()
                     newGO.add(term.getId());
                 }
@@ -1104,7 +1125,8 @@ public class NetworkFlow implements Serializable{
         InputOutput io = new InputOutput();
         Map<String, List<String>> mapFull = io.mapGOtxt(file);
         //Map<String, List<String>> map = filterGO(utils.getGOHierarchy(), mapFull, fileIrrelevantGO);
-        Map<String, List<String>> map = filterGO(utils.getGOHierarchy(), mapFull);
+        Map<String, OntologyUtils.Term> goh=utils.getGOHierarchy();
+        Map<String, List<String>> map = filterGO(goh, mapFull);
         
         for(String n:network.keySet()){
             Node v = network.get(n);

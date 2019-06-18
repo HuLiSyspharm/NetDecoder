@@ -99,6 +99,7 @@ public class NetDecoderUtils {
             }
             bw.close();
         } catch (IOException io) {
+            System.out.println(io.getMessage());
         	throw new IOException("Trouble creating or writing to " + file);
         }
     }

@@ -734,8 +734,10 @@ public class RJava {
        return scriptName;
     }
     
-    public String createBarplotScript(String dir, String name, String disease, 
+    public String createBarplotScript(String dir, String name, String control, String disease, 
             double corThreshold, double ratioThreshold, String filename){
+        //zc@20160821, write the actual control name to R script, instead of "control"
+        //System.out.println("in createBarplotScript, control="+control);
         String scriptName = dir + filename + "_barplotScript.R";
         String file = "\'" + name + ".txt\'";
         String write_1 = "\'" + dir + filename  + "_keyEdges.pdf" + "\'";
@@ -761,7 +763,8 @@ public class RJava {
             bw.write("rownames(flows) <- as.vector(flows$edge); \n");
             bw.write("flows <- flows[,c(2, 3)]; \n");
             bw.write("flows <- flows[which(flows$" + disease + " > " + corThreshold + "),]; \n");
-            bw.write("flows <- flows[which(flows$" + disease + " / flows$control > " + ratioThreshold + "),]; \n");
+            bw.write("flows <- flows[which(flows$" + disease + " / flows$"+control+" > " + ratioThreshold + "),]; \n");
+            //zc@20160821, write the actual control name to R script, instead of "control"
             bw.write("flows <- flows[order(flows$" + disease + ", decreasing=TRUE),]; \n");
             bw.write("pca <- prcomp(t(flows), center=TRUE, scale=FALSE); \n");
             bw.write("max <- 10; \n");
@@ -771,7 +774,8 @@ public class RJava {
             bw.write("top.genes <- unique(c(names(pc1[1:max]), names(pc1[(length(pc1) - max):length(pc1)]), names(pc2[1:max]), names(pc2[(length(pc2) - max):length(pc2)]))); \n");
             bw.write("flows.m <- flows[top.genes,]; \n");
             bw.write("write.table(flows.m, file=" + write_2 + ", sep='\t', quote=FALSE); \n");
-            bw.write("flows.m <- flows.m[order(flows.m$control, decreasing=TRUE),]; \n");
+            bw.write("flows.m <- flows.m[order(flows.m$"+control+", decreasing=TRUE),]; \n");
+            //zc@20160821, write the actual control name to R script, instead of "control"
             //bw.write("flows.m <- flows.m[order(flows.m$"+disease+", decreasing=TRUE),]; \n");
             bw.write("flows.m$edges = rownames(flows.m); \n");
             bw.write("flows.m <- melt(flows.m, id.var='edges'); \n");
@@ -916,8 +920,9 @@ public class RJava {
 
     }
     
-    public void plotBarplot(String dir, String name, String disease, 
+    public void plotBarplot(String dir, String name, String control, String disease, 
             double corThreshold, double ratioThreshold, String filename){
+        //zc@20160821, write the actual control name to R script, instead of "control"
         String file = "\'" + name + ".txt\'";
         String write_1 = "\'" + dir + filename  + "_keyEdges.pdf" + "\'";
         String write_2 = "\'" + dir + filename  + "_keyEdges.txt" + "\'";
@@ -928,7 +933,8 @@ public class RJava {
         re.eval("rownames(flows) <- as.vector(flows$edge)");
         re.eval("flows <- flows[,c(2, 3)]");
         re.eval("flows <- flows[which(flows$"+disease+" > " + corThreshold + "),]");
-        re.eval("flows <- flows[which(flows$"+disease+" / flows$control > "+ ratioThreshold +"),]");
+        re.eval("flows <- flows[which(flows$"+disease+" / flows$"+control+" > "+ ratioThreshold +"),]");
+        //zc@20160821, write the actual control name to R script, instead of "control"
         re.eval("flows <- flows[order(flows$"+disease+", decreasing=TRUE),]");
         re.eval("pca <- prcomp(t(flows), center=TRUE, scale=FALSE)");
         re.eval("max <- 10");
@@ -938,7 +944,7 @@ public class RJava {
         re.eval("top.genes <- unique(c(names(pc1[1:max]), names(pc1[(length(pc1) - max):length(pc1)]), names(pc2[1:max]), names(pc2[(length(pc2) - max):length(pc2)])))");
         re.eval("flows.m <- flows[top.genes,]");
         re.eval("write.table(flows.m, file=" + write_2+ ", sep='\t', quote=FALSE)");
-        re.eval("flows.m <- flows.m[order(flows.m$control, decreasing=TRUE),]");
+        re.eval("flows.m <- flows.m[order(flows.m$"+control+", decreasing=TRUE),]");
         //re.eval("flows.m <- flows.m[order(flows.m$"+disease+", decreasing=TRUE),]");
         re.eval("flows.m$edges = rownames(flows.m)");
         re.eval("flows.m <- melt(flows.m, id.var='edges')");
