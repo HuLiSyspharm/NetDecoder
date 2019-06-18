@@ -260,7 +260,7 @@ public class NetDecoder {
         
         //Map<String, Double> diseaseSinksMap = NetDecoderUtils.getSinks(diseasePaths);
         //Map<String, Double> obsFlowDifference = getFlowDifference(flowInNetworks, diseaseSinksMap.keySet());
-        Map<String, Double> obsFlowDifference = computeImpactScore(controlNetwork, diseaseNetwork);
+        Map<String, Double> obsFlowDifference = computeImpactScore(controlNetwork, diseaseNetwork, null);
         
         System.out.println(controlNetwork.size());
         System.out.println(diseaseNetwork.size());
@@ -279,7 +279,7 @@ public class NetDecoder {
                 //Map<String, Double> randomSinksMap = NetDecoderUtils.getSinks(randomPaths);
                 //Map<String, Map<String, Double>> randFlowInNetworks = getFlowInNetworks(controlPaths, randomPaths);
                 //Map<String, Double> randFlowDifference = getFlowDifference(randFlowInNetworks, randomSinksMap.keySet());
-                Map<String, Double> randFlowDifference = computeImpactScore(controlNetwork, randomNetwork);
+                Map<String, Double> randFlowDifference = computeImpactScore(controlNetwork, randomNetwork, null);
                 
                 if (randFlowDifference.containsKey(gene)) {
                     if (randFlowDifference.get(gene) >= obsFlowDifference.get(gene)) {
@@ -367,7 +367,8 @@ public class NetDecoder {
             Map<String, Map<String, Double>> aux = changeMapping(flowMatrix);
             String name = path + filename + "_flowMatrix";
             saveFlowMatrix(aux, control, condition, name + ".txt");
-            rJava.plotBarplot(path, name, condition, corThreshold, ratioThreshold, filename);
+            rJava.plotBarplot(path, name, control, condition, corThreshold, ratioThreshold, filename);
+            //zc@20160821, write the actual control name to R script, instead of "control"
         }
         
         countFeatures(dir, filename, condition);
@@ -741,7 +742,8 @@ public class NetDecoder {
 
     public Map<String, Double> computeImpactScore(
             Map<String, Node> controlNetwork, 
-            Map<String, Node> diseaseNetwork){
+            Map<String, Node> diseaseNetwork, String filename) throws IOException // cheng zhang @20190617 modified to provide an option to output the full impact scores
+        {
         
         Map<String, Map<String, Double>> flowInNetworks = getFlowInNetworks(controlNetwork, diseaseNetwork);
         
@@ -760,6 +762,13 @@ public class NetDecoder {
                 }
             }
         }
+        if(filename!=null)
+          {
+          System.out.println("writing to file " + filename);
+          NetDecoderUtils.saveCCS(scores, "IMPACT_SCORE",filename);
+          }
+        
+        
         Map<String, Double> sortedScores = NetworkFlow.sortByValues(scores);
         List<String> aux = new ArrayList(sortedScores.keySet());
         List<String> topGenes_down = aux.subList(0, 20);
@@ -804,7 +813,8 @@ public class NetDecoder {
         List<String> diseaseNetworkPaths = Serialization.deserialize(ndp, List.class);
         Map<String, Node> controlNetwork = createNetworkFromPaths(controlNetworkPaths);
         Map<String, Node> diseaseNetwork = createNetworkFromPaths(diseaseNetworkPaths);
-        Map<String, Double> topGenesScores = computeImpactScore(controlNetwork, diseaseNetwork);
+        String fn_fullips=filename + "_FULL_IMPACT_SCORE_" + condition + ".txt";
+        Map<String, Double> topGenesScores = computeImpactScore(controlNetwork, diseaseNetwork, fn_fullips);
         
         //String path2create = dir + diseaseStates.get(1) + "/";
         //String path2create = dir + condition + "/";
@@ -1060,7 +1070,8 @@ public class NetDecoder {
         
         List<String> Rscripts = new ArrayList();
         //rJava.plotBarplot(path2create, name, condition, corThreshold, ratioThreshold, filename);
-        String barplot = rJava.createBarplotScript(path2create, name, condition, corThreshold, ratioThreshold, filename);
+        String barplot = rJava.createBarplotScript(path2create, name, control, condition, corThreshold, ratioThreshold, filename);
+        //zc@20160821, write the actual control name to R script, instead of "control"
         //Rscripts.add(barplot);
  
         try {
@@ -1115,7 +1126,7 @@ public class NetDecoder {
         Set<String> sinks = prioritizeSinks(controlNetwork, diseaseNetwork, condition, top, rJava, name_2, Rscripts);
         System.out.println("Saving Network routers");
         Set<String> hidden = prioritizeHiddenProteins(controlNetwork, diseaseNetwork, condition, top, rJava, name_2, Rscripts);
-        Set<String> IPgenes = computeImpactScore(controlNetwork, diseaseNetwork).keySet();
+        Set<String> IPgenes = computeImpactScore(controlNetwork, diseaseNetwork, null).keySet();
         prioritizePaths(controlNetworkPaths, diseaseNetworkPaths, totalFlowsDisease, flowInNetworks,
                 sinks, hidden, IPgenes, rJava, name_2, Rscripts);
         
@@ -1152,7 +1163,7 @@ public class NetDecoder {
             }else{
                 tmp.put("control", controlNetwork.get(gene).getTotalFlow());
                 tmp.put("disease", 0.0);
-                tmp.put("difference", controlNetwork.get(gene).getTotalFlow());
+                tmp.put("difference", - controlNetwork.get(gene).getTotalFlow());
             }
             flows.put(gene, tmp);
         }
