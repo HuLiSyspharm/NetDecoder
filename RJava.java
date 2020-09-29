@@ -779,7 +779,9 @@ public class RJava {
             //bw.write("flows.m <- flows.m[order(flows.m$"+disease+", decreasing=TRUE),]; \n");
             bw.write("flows.m$edges = rownames(flows.m); \n");
             bw.write("flows.m <- melt(flows.m, id.var='edges'); \n");
-            bw.write("flows.m$edges <- factor(flows.m$edges, levels=flows.m$edges); \n");
+//            bw.write("flows.m$edges <- factor(flows.m$edges, levels=flows.m$edges); \n");
+            bw.write("flows.m$edges <- factor(flows.m$edges, levels=unique(flows.m$edges)); \n");
+            //zc@2020028, make levels unique to work with newer R versions
             bw.write("colls <- c('#BDC9E1', '#67A9CF', '#1C9099', '#016C59', '#0023a0', '#f9a635', 'red', 'black'); \n");
             bw.write("pdf(file=" + write_1 + ", width=5, height=3); \n");
             //bw.write("pdf(file=" + write_1 + ", width=2.5, height=5); \n");
